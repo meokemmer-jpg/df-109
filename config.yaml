@@ -1,0 +1,285 @@
+# DF-109 Cape-Coral-Relocation-Phase-Monitor Config [CRUX-MK]
+# Welle: 23-B (Pareto-Phase-1: 3 Dimensionen K_0-Guard + E-2 + § 6 AStG)
+# Spec: branch-hub/blueprints/welle-23/SPEC-DF-109-CAPE-CORAL-RELOCATION-MONITOR-2026-05-10.md
+# Domain: K_0 (Wegzug/Steuer/Vermoegen) - STRENG-SPERR
+
+df_id: DF-109
+df_name: cape-coral-relocation-phase-monitor
+welle: 23-B
+domain: K_0
+status: SKELETON-CONDITIONAL  # pending Cross-LLM-Audit + 30-Tage-Empirie
+
+mission: |
+  Phase-Monitor fuer Cape-Coral-Relocation (DE -> FL USA).
+  NICHT Decision-Maker. Aggregiert Status aus existing-Files + visualisiert
+  Health-Score pro Phase. K_0-Sperr: Wegzug-Timing bleibt Martin-Phronesis.
+
+# === Default-Action (per ausreden-schutz.md Schicht 2, Welle-47 Migration Batch-2) ===
+# K_0-HARD: DF-109 ist Cape-Coral-Relocation-Phase-Monitor (Wegzug/Steuer/Vermoegen STRENG-SPERR)
+default_action:
+  description: "Cape-Coral-Relocation-Phase-Monitor: Health-Score-Aggregation pro Phase (K_0-Guard + E-2-Visa + § 6 AStG), Read-only-State-File-Updates, NICHT Decision-Maker (Wegzug-Timing bleibt Martin-Phronesis)"
+  rho_per_run_eur: 120
+  rho_validation_source: unvalidated
+  block_gates:
+    - gate_id: K14
+      block_reason: "K_0-HARD Wegzug/Steuer/Vermoegen STRENG-SPERR: alle Decisions bleiben Martin-Phronesis (L13), DF-109 ist Monitor nicht Decision-Maker"
+      false_block_cost_eur: 500
+      legitimate_block_condition: "DF-109 versucht Decision-Maker-Aktion (Wegzug-Timing-Auto-Trigger) ODER §6-AStG-Aktion ohne Martin-Approval"
+    - gate_id: K13_PAV
+      block_reason: "Pre-Action-Verification: bmf_form_version (AStG-Lock 2025_v1) + env_tag + filesystem-Anker Pflicht"
+      false_block_cost_eur: 200
+      legitimate_block_condition: "AStG-Version-Drift erkannt ODER Health-Score-Calc auf stale BMF-Form-Daten"
+    - gate_id: K12
+      block_reason: "Provenance Pflicht (Source-Field per Dimension: mock|real-government|real-tax-advisor)"
+      false_block_cost_eur: 80
+      legitimate_block_condition: "Phase-Health-Score ohne Source-Field ODER ohne Negative-RegEx-Validation (Patch P1)"
+  graceful_degradation_path: "Read-only-State-File-Aggregation (existing-Files-Scan), kein External-Government-API ohne Vertrag, Mock-Phase-Health auf historischen Daten"
+
+# ---------------------------------------------------------------------------
+# Patch P2: AStG-Version-Lock (PFLICHT - vor allem anderen)
+# ---------------------------------------------------------------------------
+bmf_form_version: 2025_v1   # Patch P2 (Gemini): expliziter BMF-Vordruck-Stand
+
+# ---------------------------------------------------------------------------
+# K11 Cascade-Containment
+# ---------------------------------------------------------------------------
+k11_cascade_isolation: hard
+failure_blast_radius: 0  # DF-109 ist isoliert, keine downstream-Konsequenzen
+dependency_dlq_strategy: "Eigenes State-File, kein DLQ noetig (read-only-DF)"
+
+# ---------------------------------------------------------------------------
+# K12 Distillation-Resistenz
+# ---------------------------------------------------------------------------
+k12_distillation_resistenz:
+  output_feeds_into_training: false
+  provenance_required_in_output: true   # Source-Field per Dimension (mock|real-...)
+  non_llm_validation_layer: true        # Patch P1 Negative-RegEx-Tests Pflicht
+
+# ---------------------------------------------------------------------------
+# K13 Independent-Ground-Truth (Filesystem-Anker)
+# ---------------------------------------------------------------------------
+k13_independent_ground_truth:
+  external_anchor_type: filesystem
+  external_anchor_files:
+    - docs/decision-cards/DC-CAPE-CORAL-*.md
+    - branch-hub/findings/CAPE-CORAL-OVERVIEW-README.md
+    - branch-hub/areas/family/Cape-Coral-Relocation/
+    - Claude-Vault/projects/cape-coral-relocation/
+  external_anchor_validation_frequency: per_run
+
+  # Patch P7 K17 Pre-Action-Verification (PocketOS-Lehre + Verfassungsrang)
+  pre_action_domain_check: true
+  pre_action_backup_check: true
+  pre_action_blast_radius_check: true
+
+  # Wargame-Patch P7 (Codex+Gemini): File-Stability-Check (Drive-Sync-Race-Schutz)
+  file_stability_min_age_sec: 300  # 5 Min - K13-Anker muessen unbearbeitet sein
+
+# ---------------------------------------------------------------------------
+# K14 Human-Override-Decay
+# ---------------------------------------------------------------------------
+k14_human_override_decay:
+  override_complexity: single_command   # `launchctl unload` oder STOP.flag
+  override_documentation_freshness_days: 30
+  martin_review_cadence: weekly         # Cape-Coral hoch-K_0 = enger Review
+  bus_factor_handover_drilled: false   # DF-109 single-owner Mac-Branch
+
+# ---------------------------------------------------------------------------
+# K15 Entropy-Budget
+# ---------------------------------------------------------------------------
+k15_entropy_budget:
+  entropy_added_loc_estimate: 280
+  entropy_added_concepts:
+    - K_0-Wegzug-Timing-Guard (NUR Status, KEIN Timing-Decider)
+    - 7-Dimensionen-Phase-Monitor (E-2 + AStG + SPT + Smart-Home + Property + Bridge)
+    - § 6 AStG-Tracker (BMF-Vordruck-Anker + Patch P2 Version-Lock)
+    - Wargame-Patches 7 (Output-Sanitizer + AStG-Version-Lock + Binary-Health
+      + Diff-Only + Web-API-Race + Action-Routing + K17)
+  entropy_justified_by_rho:
+    rho_estimation_method: SUCCESS_PROBABILITY_INCREMENT
+    rho_low_eur_per_year: 30000   # Vermiedene Steuer-Stundungs-Fehler / E-2-Verzoegerung
+    rho_high_eur_per_year: 500000 # Vermiedene §6-Trigger-Event-Falscherkennung
+    rho_confidence: PROVISIONAL
+  entropy_subtractive_potential:
+    - replaces: "Manueller Cape-Coral-Status via Excel + Email Steuerberater"
+      saves_loc_estimate: 0
+      saves_manual_hours_per_quartal: 12
+  net_loc_balance: +280
+
+# ---------------------------------------------------------------------------
+# K16 Concurrent-Spawn-Mutex
+# ---------------------------------------------------------------------------
+k16_concurrent_spawn_protection: both
+lock_dir: /tmp/df-109.lock
+lock_stale_age_h: 6
+engine_pgrep_check: true
+lock_release_on: EXIT_INT_TERM
+
+# ---------------------------------------------------------------------------
+# LC1-LC5 Lose-Coupling (df-lose-coupling Rule)
+# ---------------------------------------------------------------------------
+lose_coupling:
+  LC1_graceful_degradation:
+    degradation_modes:
+      - full              # alle Anker stable + real-mode aktiv
+      - degraded_uscis_api  # ohne USCIS-API -> Decision-Card-Fallback
+      - standalone        # Mock-Mode default (kein Real-Read)
+    degradation_test_required: true
+  LC2_direct_mode:
+    direct_mode_available: true
+    direct_mode_capability: 0.80   # 80% nur Filesystem (ohne USCIS-API)
+    direct_mode_trigger: "DF_109_REAL_API_ENABLED=false OR file-stability-check-fail"
+  LC3_circuit_breaker:
+    circuit_breaker_timeout_s: 30
+    circuit_breaker_open_threshold: 3
+    circuit_breaker_half_open_test_interval_s: 300
+  LC4_failure_isolation:
+    state_externalization: true   # State in reports/cape-coral-status-{date}.json
+    idempotent_operations: true   # Re-Run sicher
+    dependency_dlq_separate: false  # Read-only-DF, kein DLQ
+  LC5_health_check:
+    health_check_dependencies: []
+    health_check_degraded_score: 0.7
+    health_check_endpoint_or_file: branch-hub/state/df-109-health.json
+
+# ---------------------------------------------------------------------------
+# Activation-Gates (env-var-gated-real-integration-default Pattern)
+# ---------------------------------------------------------------------------
+activation_gates:
+  DF_109_REAL_API_ENABLED:
+    default: false
+    description: "Real-Filesystem-Read der Decision-Card-Anker. Default Mock."
+    requires_phronesis_ticket: true
+  DF_109_USCIS_API_ENABLED:
+    default: false
+    description: "USCIS-API-Read fuer Termin-Slots (Phase-2)."
+    requires_phronesis_ticket: true
+    pending_phronesis: "P-DF109-1"
+  DF_109_TAX_PROVIDER_API_ENABLED:
+    default: false
+    description: "Tax-Provider-API (Steuerberater-Integration, Phase-2 spaeter)."
+    requires_phronesis_ticket: true
+    pending_phronesis: "P-DF109-3"
+  DF_109_ENV:
+    default: dev
+    description: "Env-Tag fuer K17 PAV (dev/staging/prod)."
+
+# ---------------------------------------------------------------------------
+# K_0-Sperr-Liste (PFLICHT enforced via NEGATIVE-Tests)
+# ---------------------------------------------------------------------------
+k0_sperr_liste:
+  - id: K0-1
+    rule: "Wegzug-Timing-Empfehlung produzieren (NUR Status-Anzeige erlaubt)"
+    enforcement: "Patch P1 Output-Sanitizer + WegzugTimingGuardDimension.timing_status whitelist"
+  - id: K0-2
+    rule: "Steuer-Decisions (Stundung ja/nein, Verkauf vor Wegzug, etc.)"
+    enforcement: "Patch P1 RegEx blockiert 'empfehle/sollte/optimal'"
+  - id: K0-3
+    rule: "§17-Bewertung (gemeiner Wert) - Steuerberater-Domain"
+    enforcement: "Engine hat keine valuation_section17 Funktion"
+  - id: K0-4
+    rule: "E-2-Investment-Decisions (Hoehe, Struktur)"
+    enforcement: "E2VisaLifecycleDimension hat NUR Status-Felder, keine Decision-Felder"
+  - id: K0-5
+    rule: "Property-Buy-Decisions (Cape-Coral-Immobilien-Auswahl)"
+    enforcement: "PropertyRiskDimension hat NUR Status-Felder"
+  - id: K0-6
+    rule: "Advisor-Override silently stale (Anti-Pattern)"
+    enforcement: "WebApiData.is_stale-Pflicht-Display + last_advisor_decision_iso check"
+  - id: K0-7
+    rule: "Green Health despite missing source (Anti-Pattern)"
+    enforcement: "Patch P3 BinaryHealth.data_present nur True wenn anchors_found > 0"
+
+# ---------------------------------------------------------------------------
+# Wargame-Patches (Cross-LLM Codex+Mistral 2OF3-MODIFY + Gemini ADOPT-with-Patches)
+# ---------------------------------------------------------------------------
+wargame_patches:
+  P1_output_sanitizer:
+    source: Gemini+Codex
+    description: "RegEx-Filter blockiert 'optimal/jetzt wegziehen/stichtag-vorschlag/empfehle'"
+    implementation: "DECISION_KEYWORDS_REGEX + assert_no_decision_keywords()"
+    test: tests/test_df_109_engine.py::test_output_sanitizer_blocks_decision_words
+  P2_astg_version_lock:
+    source: Gemini
+    description: "config.yaml MUSS bmf_form_version referenzieren (z.B. 2025_v1)"
+    implementation: "AstgWegzugssteuerDimension.__post_init__ enforced bmf_form_version"
+    test: tests/test_df_109_engine.py::test_astg_version_lock_enforced
+  P3_binary_health_per_k0_dim:
+    source: Gemini
+    description: "Score nur 'Daten-Praesenz' (vorhanden/fehlend), KEINE qualitative-Bewertung"
+    implementation: "BinaryHealth dataclass mit data_present/anchor_count/anchors_found"
+    test: tests/test_df_109_engine.py::test_binary_health_no_qualitative_score
+  P4_diff_only_reports:
+    source: Gemini
+    description: "Standard-Ansicht zeigt nur Deltas seit letzter Phronesis-Freigabe"
+    implementation: "filter_diff_only() + TrackerOutput.diff_only_mode=True default"
+    test: tests/test_df_109_engine.py::test_diff_only_reports_default
+  P5_web_api_race_schutz:
+    source: Codex
+    description: "fetched_at + source_hash + stale_if_older_than + retry/backoff"
+    implementation: "WebApiData dataclass mit is_stale property + _make_web_api_data()"
+    test: tests/test_df_109_engine.py::test_web_api_race_stale_marker
+  P6_action_routing:
+    source: Codex
+    description: "pro Report-Item: owner + due_date + escalation_path + acknowledged-state"
+    implementation: "ActionItem dataclass + action_items list in TrackerOutput"
+    test: tests/test_df_109_engine.py::test_action_routing_per_item
+  P7_k17_pav_pflicht:
+    source: Codex
+    description: "Pre-Action-Check fuer alle Filesystem-Anker, Blockierender ENV-Var-Gate"
+    implementation: "k17_pre_action_verification() + _file_stable() Helper"
+    test: tests/test_df_109_engine.py::test_k17_pav_blocks_on_missing_anchor
+
+# ---------------------------------------------------------------------------
+# Pareto-Phase-1 vs Phase-2
+# ---------------------------------------------------------------------------
+pareto_phase_1_dimensions:
+  - D1_wegzug_timing_guard      # K_0-Guard
+  - D2_e2_visa_lifecycle
+  - D3_astg_wegzugssteuer
+pareto_phase_2_dimensions:
+  - D4_tax_residency_spt
+  - D5_smart_home_readiness
+  - D6_property_risk_setup
+  - D7_business_continuity_bridge
+
+# ---------------------------------------------------------------------------
+# Cadence (LaunchAgent-Pattern, Phase-2 Pflicht)
+# ---------------------------------------------------------------------------
+cadence:
+  weekly_mo_07_00:
+    enabled: false  # Phase-2 (nach Pilot-Erfolg)
+    trigger: "LaunchAgent ~/Library/LaunchAgents/com.kemmer.df-109.plist"
+    action: "Read Decision-Card-Anker + Update Status-Dashboard JSON + Diff-Report"
+  monthly_review:
+    enabled: true   # Phase-1
+    action: "Martin Review-Trigger fuer Phase-Update (Phronesis-Pflicht)"
+
+# ---------------------------------------------------------------------------
+# Pending Phronesis Martin (4 Items aus SPEC)
+# ---------------------------------------------------------------------------
+pending_phronesis:
+  - id: P-DF109-1
+    item: "USCIS-API Tier-2 Approval (Real-Lookup nur via Steueranwalt-LexVance erlaubt?)"
+    blocked_until_decided: true
+  - id: P-DF109-2
+    item: "§ 6 AStG Stichtag fix oder dynamisch (Wegzugsdatum ist Phronesis)"
+    blocked_until_decided: false
+  - id: P-DF109-3
+    item: "SPT-Tage-Tracker Source (Calendar/Manual/Steuerberater?)"
+    blocked_until_decided: true
+  - id: P-DF109-4
+    item: "Property-Risk-Insurance-Binder Anker (US-Anwalt-Output?)"
+    blocked_until_decided: false
+
+# ---------------------------------------------------------------------------
+# Trinity-Pattern (rules/trinity-evaluatorisch)
+# ---------------------------------------------------------------------------
+trinity_compliance:
+  options_presented_in_spec: true
+  variants:
+    - conservative: "Mock-Mode default, Pareto-Phase-1 only (D1+D2+D3)"
+    - aggressive: "DF_109_REAL_API_ENABLED=true + Phase-2 nach Phronesis"
+    - contrarian: "Sunset DF-109 wenn Cape-Coral-Phase abgeschlossen (Owner-Status FL)"
+
+# [CRUX-MK]
