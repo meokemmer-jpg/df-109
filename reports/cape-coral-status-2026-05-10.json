@@ -1,0 +1,105 @@
+{
+  "timestamp_iso": "2026-05-10T10:01:59Z",
+  "env_tag": "dev",
+  "pareto_phase": 1,
+  "wegzug_timing": {
+    "timing_status": "review",
+    "last_advisor_decision_iso": null,
+    "advisor_name": "lexvance",
+    "decision_card_path": "docs/decision-cards/DC-CAPE-CORAL-PENDING.md",
+    "health": {
+      "data_present": true,
+      "anchor_count": 1,
+      "anchors_found": 1,
+      "anchors_stale": 0
+    },
+    "source": "mock"
+  },
+  "e2_visa": {
+    "current_phase": "treaty-check",
+    "treaty_nationality_verified": true,
+    "investment_substantial": false,
+    "capital_at_risk": false,
+    "marginality_risk_assessed": false,
+    "uscis_appointment_data": {
+      "payload": {
+        "appointment_slots": [],
+        "next_available": null
+      },
+      "fetched_at_iso": "2026-05-10T10:01:59Z",
+      "source_hash": "c88b6167606fda52",
+      "stale_if_older_than_sec": 86400,
+      "retry_count": 0,
+      "backoff_next_sec": 0
+    },
+    "health": {
+      "data_present": true,
+      "anchor_count": 2,
+      "anchors_found": 1,
+      "anchors_stale": 0
+    },
+    "source": "mock"
+  },
+  "astg_wegzugssteuer": {
+    "current_phase": "pre-departure-prep",
+    "bmf_form_version": "2025_v1",
+    "has_section17_beteiligung": true,
+    "stundung_status": "not-applied",
+    "next_annual_notification_due": "2027-07-31",
+    "seven_year_window_active": true,
+    "twelve_year_window_active": false,
+    "health": {
+      "data_present": true,
+      "anchor_count": 2,
+      "anchors_found": 2,
+      "anchors_stale": 0
+    },
+    "source": "mock"
+  },
+  "tax_residency": null,
+  "smart_home": null,
+  "property_risk": null,
+  "business_continuity": null,
+  "pending_phronesis_count": 4,
+  "notes": [
+    "DF-109 Pareto-Phase-1: D1+D2+D3 (Wegzug-Guard + E-2 + AStG)",
+    "K_0-Sperr aktiv: NUR Tracking, KEINE Wegzug-Timing-Decisions.",
+    "BMF-Form-Version-Lock: 2025_v1 (Patch P2)."
+  ],
+  "alerts": [],
+  "action_items": [
+    {
+      "item_id": "AI-DF109-1",
+      "description": "Lexvance Wegzug-Timing-Decision Review",
+      "owner": "lexvance",
+      "due_date_iso": "2026-06-30",
+      "escalation_path": "lexvance -> steuerberater -> us-tax-attorney -> martin",
+      "state": "pending",
+      "acknowledged_at_iso": null,
+      "resolved_at_iso": null
+    },
+    {
+      "item_id": "AI-DF109-2",
+      "description": "E-2 Treaty-Investor Petition Vorbereitung",
+      "owner": "us-immigration-attorney",
+      "due_date_iso": "2026-09-30",
+      "escalation_path": "us-immigration-attorney -> lexvance -> martin",
+      "state": "pending",
+      "acknowledged_at_iso": null,
+      "resolved_at_iso": null
+    },
+    {
+      "item_id": "AI-DF109-3",
+      "description": "\u00a7 6 AStG Stundungsantrag Pruefung",
+      "owner": "steuerberater",
+      "due_date_iso": "2026-07-31",
+      "escalation_path": "steuerberater -> lexvance -> martin",
+      "state": "pending",
+      "acknowledged_at_iso": null,
+      "resolved_at_iso": null
+    }
+  ],
+  "diff_only_mode": true,
+  "last_freigabe_iso": null,
+  "source_mode": "mock"
+}
