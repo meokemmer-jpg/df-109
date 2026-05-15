@@ -1,5 +1,5 @@
 {
-  "timestamp_iso": "2026-05-15T03:54:02Z",
+  "timestamp_iso": "2026-05-15T05:49:22Z",
   "env_tag": "dev",
   "pareto_phase": 1,
   "wegzug_timing": {
@@ -26,7 +26,7 @@
         "appointment_slots": [],
         "next_available": null
       },
-      "fetched_at_iso": "2026-05-15T03:54:02Z",
+      "fetched_at_iso": "2026-05-15T05:49:22Z",
       "source_hash": "c88b6167606fda52",
       "stale_if_older_than_sec": 86400,
       "retry_count": 0,
