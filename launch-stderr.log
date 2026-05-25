@@ -1,0 +1,4 @@
+  File "/Users/make/Projects/dark-factories/df-109/df-109-engine.py", line 75
+    from __future__ import annotations
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+SyntaxError: from __future__ imports must occur at the beginning of the file
