@@ -1,0 +1,6 @@
+{
+  "verdict": "HOLDS",
+  "reason": "Der Test fuehrt echte Dateieingaben durch die Monitor-Funktion, zeigt mit adversarialen Entscheidungs-/Wegzug-Patterns einen anderen blockierten Output als beim Clean-Fall und prueft zusaetzlich, dass K0 in beiden Faellen entscheidungsblockiert bleibt.",
+  "ts": "2026-07-08T22:59:34.684441+00:00",
+  "attempts": 1
+}

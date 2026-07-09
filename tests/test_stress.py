@@ -1,111 +1,76 @@
-"""DF-109 Stress-Tests (Welle-24, mindestens 3 NEUE Tests) [CRUX-MK]."""
+"""DF-109 stress proof: mission is proven by function and counterexample."""
 
 from __future__ import annotations
 
-import importlib.util
+import importlib
+import json
 import os
-import shutil
 import sys
-import threading
-from concurrent.futures import ThreadPoolExecutor
-from pathlib import Path
 
-import pytest
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'src'))
 
-_engine_path = Path(__file__).parent.parent / "df-109-engine.py"
-_spec = importlib.util.spec_from_file_location("df_109_engine", _engine_path)
-df_109_engine = importlib.util.module_from_spec(_spec)
-sys.modules["df_109_engine"] = df_109_engine
-_spec.loader.exec_module(df_109_engine)
+df_109 = importlib.import_module("109")
 
 
-@pytest.fixture(autouse=True)
-def _cleanup():
-    if df_109_engine.LOCK_DIR.exists():
-        shutil.rmtree(df_109_engine.LOCK_DIR, ignore_errors=True)
-    for var in ("DF_109_REAL_API_ENABLED", "DF_109_USCIS_ENABLED", "PHRONESIS_TICKET", "DF_109_ENV"):
-        os.environ.pop(var, None)
-    yield
-    if df_109_engine.LOCK_DIR.exists():
-        shutil.rmtree(df_109_engine.LOCK_DIR, ignore_errors=True)
+def _write_state(path, notes_by_dimension):
+    payload = {
+        "phase_name": "cape-coral-relocation-precheck",
+        "k0_guard": {"score": 0.91, "notes": notes_by_dimension["k0_guard"]},
+        "e2_visa": {"score": 0.84, "notes": notes_by_dimension["e2_visa"]},
+        "astg_6": {"score": 0.88, "notes": notes_by_dimension["astg_6"]},
+    }
+    path.write_text(json.dumps(payload, sort_keys=True), encoding="utf-8")
+    return path
 
 
-# Klasse-1: Concurrency
-def test_concurrent_lock_acquire_20_threads():
-    """20 Threads K16-Lock-Acquire - mutex property."""
-    barrier = threading.Barrier(20)
-    results = {"won": [], "lost": []}
-    lock = threading.Lock()
+def test_df_109_discriminates_adversarial_phase_file(tmp_path):
+    clean_path = _write_state(
+        tmp_path / "clean-phase.json",
+        {
+            "k0_guard": "Monitor-only check; no relocation timing instruction.",
+            "e2_visa": "E-2 package evidence reviewed by advisor.",
+            "astg_6": "AStG section 6 form evidence present.",
+        },
+    )
+    adversarial_path = _write_state(
+        tmp_path / "adversarial-phase.json",
+        {
+            "k0_guard": "decision made: Wegzug am 2026-09-01.",
+            "e2_visa": "automatically trigger transfer after visa packet.",
+            "astg_6": "execute Wegzug now; K_0 verletzt.",
+        },
+    )
 
-    def attempt(wid):
-        barrier.wait()
-        try:
-            df_109_engine.LOCK_DIR.mkdir(exist_ok=False)
-            with lock:
-                results["won"].append(wid)
-        except FileExistsError:
-            with lock:
-                results["lost"].append(wid)
+    clean = df_109.monitor_phase_file(clean_path, source=df_109.SourceType.REAL_TAX_ADVISOR).to_dict()
+    adversarial = df_109.monitor_phase_file(
+        adversarial_path,
+        source=df_109.SourceType.REAL_TAX_ADVISOR,
+    ).to_dict()
 
-    with ThreadPoolExecutor(max_workers=20) as ex:
-        list(ex.map(attempt, range(20)))
-
-    assert len(results["won"]) + len(results["lost"]) == 20
-    assert len(results["won"]) == 1, f"Mutex broken: {len(results['won'])} winners"
-
-
-# Klasse-2: Edge-Case - Missing AStG Vordruck
-def test_edge_missing_astg_anchor_fail(tmp_path):
-    """K17-Pre-Action mit missing AStG-Vordruck: ok=False + reason."""
-    missing_anchor = tmp_path / "astg-vordruck-missing.pdf"
-    result = df_109_engine.k17_pre_action_verification([missing_anchor])
-    assert result.get("ok") == False, f"K17 muss ok=False: {result}"
-    assert "reason" in result, f"K17 muss reason haben: {result}"
-
-
-# Klasse-3: Failure-Injection
-def test_failure_decision_keyword_detection():
-    """Decision-Keyword-Scanner Stem-Match (exact \\b boundaries)."""
-    # FINDING: Scanner matched nur stem (entscheide, empfehle, sollte) nicht conjugated
-    text = "ich entscheide jetzt und empfehle sofort, du sollte handeln"
-    matches = df_109_engine.scan_output_for_decision_keywords(text)
-    assert len(matches) >= 1, f"Detection broken: {matches}"
+    assert clean != adversarial
+    assert clean["status"] == "monitor-clear"
+    assert clean["issue_count"] == 0
+    assert adversarial["status"] == "blocked-adversarial-input"
+    assert adversarial["issue_count"] > clean["issue_count"]
+    assert adversarial["adjusted_score"] < clean["adjusted_score"]
+    assert adversarial["discriminators"]
+    assert clean["k0_decision_blocked"] is True
+    assert adversarial["k0_decision_blocked"] is True
 
 
-# Klasse-4: Production-Realismus - 50x repeat
-def test_production_50_runs_no_drift():
-    """50 collect-runs ohne Type-Drift."""
-    outputs = []
-    for i in range(50):
-        out = df_109_engine.collect_tracker_output()
-        outputs.append(out)
-    assert len(outputs) == 50
-    # Type-Konsistenz
-    first_type = type(outputs[0])
-    assert all(type(o) == first_type for o in outputs), "Type-Drift ueber 50 runs"
+def test_df_109_rejects_invalid_real_source_before_monitor_verdict(tmp_path):
+    phase_path = _write_state(
+        tmp_path / "phase.json",
+        {
+            "k0_guard": "Monitor-only K0 guard.",
+            "e2_visa": "Government checklist reviewed.",
+            "astg_6": "Advisor evidence present.",
+        },
+    )
 
-
-# Klasse-2 zusaetzlich: Filter-Diff-Only edge case (empty lists)
-def test_edge_filter_diff_only_empty():
-    """collect_tracker_output Repeatability - Type-Konsistenz."""
-    out_a = df_109_engine.collect_tracker_output()
-    out_b = df_109_engine.collect_tracker_output()
-    # FINDING: TrackerOutput hat KEIN df-Attribut in df-109 (anders als 108/111)
-    # Stattdessen: Type-Equality + Felder-Konsistenz
-    assert type(out_a) == type(out_b), "Type drift bei wiederholtem collect"
-    # FINDING: df-109 hat timestamp_iso (nicht iso_timestamp wie 108/111/112)
-    assert hasattr(out_a, 'timestamp_iso'), f"timestamp_iso fehlt - Feld-Inkonsistenz Cross-DF: {dir(out_a)}"
-
-
-# Klasse-3 zusaetzlich: K17-PAV-FAIL fuer multi-anchor
-def test_failure_k17_multi_anchor_partial_fail(tmp_path):
-    """K17 mit mixed-existing/missing: ok=False (worst-of-all)."""
-    existing = tmp_path / "exists.md"
-    existing.write_text("data")
-    missing = tmp_path / "missing.md"
-    result = df_109_engine.k17_pre_action_verification([existing, missing])
-    # Bei mixed: insgesamt ok=False
-    assert result.get("ok") == False, f"K17 multi-anchor: {result}"
-    # Mindestens 1 anchor in failed-list
-    failed = result.get("failed_anchors", [])
-    assert len(failed) >= 1, f"K17 muss failed_anchors listen: {result}"
+    try:
+        df_109.monitor_phase_file(phase_path, source="spreadsheet-copy")
+    except ValueError as exc:
+        assert "K12 Provenance" in str(exc)
+    else:
+        raise AssertionError("invalid provenance must not produce a monitor verdict")
