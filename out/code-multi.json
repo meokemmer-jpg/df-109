@@ -1,11 +1,11 @@
 {
   "df": "df-109",
-  "ts": "2026-07-06T06:34:05.225287+00:00",
+  "ts": "2026-07-10T08:05:00.471243+00:00",
   "crux": "[CRUX-MK]",
   "winner_provider": "incumbent-kept",
   "winner_tests_passed": true,
-  "incumbent_q": 1657.0,
-  "winner_q": 1657.0,
+  "incumbent_q": 1552.0,
+  "winner_q": 1552.0,
   "improved": false,
   "variants": [
     {
@@ -14,8 +14,8 @@
       "tests_passed": true,
       "n_tests": 39,
       "n_assert": 45,
-      "coverage_pct": 99.0,
-      "q": 1657.0,
+      "coverage_pct": 78.0,
+      "q": 1552.0,
       "error": null
     },
     {
@@ -26,21 +26,11 @@
       "n_assert": null,
       "coverage_pct": null,
       "q": 0.0,
-      "error": "kein 2-Block-Output (nach Retry)"
-    },
-    {
-      "provider": "sonnet",
-      "parse_ok": false,
-      "tests_passed": false,
-      "n_tests": 0,
-      "n_assert": null,
-      "coverage_pct": null,
-      "q": 0.0,
-      "error": "kein 2-Block-Output (nach Retry)"
+      "error": "[codex-Fehler: [Errno 2] No such file or directory: 'codex']"
     }
   ],
   "canonical_verify": {
     "parse_ok": true,
-    "tests_passed": false
+    "tests_passed": true
   }
 }
